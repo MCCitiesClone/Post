@@ -9,11 +9,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    outputs:
+      jar-name: ${{ steps.jar.outputs.name }}
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -35,8 +38,31 @@ jobs:
           echo "name=$JAR_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.jar.outputs.name }}
           path: ${{ steps.jar.outputs.path }}
           if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ needs.build.outputs.jar-name }}
+          path: artifact
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          files: artifact/*
+          generate_release_notes: true

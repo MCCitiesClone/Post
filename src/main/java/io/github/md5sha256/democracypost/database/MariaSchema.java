@@ -35,9 +35,11 @@ import java.util.logging.Logger;
 public class MariaSchema implements DatabaseSchema {
 
     private final Logger logger;
+    private final boolean skipUndeserializableItems;
 
-    public MariaSchema(@Nonnull Logger logger) {
+    public MariaSchema(@Nonnull Logger logger, boolean skipUndeserializableItems) {
         this.logger = logger;
+        this.skipUndeserializableItems = skipUndeserializableItems;
     }
 
     private static final String CREATE_POST_PACKAGES_TABLE = """
@@ -240,6 +242,9 @@ public class MariaSchema implements DatabaseSchema {
                         items.add(item);
                     }
                 } catch (ConfigurateException ex) {
+                    if (!this.skipUndeserializableItems) {
+                        throw new IllegalStateException("Failed to deserialize item stacks!", ex);
+                    }
                     this.logger.warning("Skipping item that could not be deserialized: " + ex.getMessage());
                 }
             }

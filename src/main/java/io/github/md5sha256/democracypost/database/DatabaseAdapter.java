@@ -21,9 +21,9 @@ public class DatabaseAdapter implements Closeable {
 
     private HikariDataSource dataSource;
 
-    public DatabaseAdapter(@Nonnull DatabaseSettings databaseSettings, @Nonnull Logger logger) {
+    public DatabaseAdapter(@Nonnull DatabaseSettings databaseSettings, @Nonnull Logger logger, boolean skipUndeserializableItems) {
         this.databaseSettings = databaseSettings;
-        this.schema = new MariaSchema(logger);
+        this.schema = new MariaSchema(logger, skipUndeserializableItems);
     }
 
     public void init() throws SQLException {
